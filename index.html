@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Systems Thinking Dashboard — Human Behavior & Business</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
+  <!-- Chart.js for charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">⎈</div>
+      <div>
+        <h1>Systems Thinking</h1>
+        <p class="subtitle">Human Nature × Business Outcomes</p>
+      </div>
+    </div>
+    <nav class="actions">
+      <button id="exportJSON" class="btn btn-ghost">Export State</button>
+      <a href="#about" class="btn btn-ghost">About</a>
+    </nav>
+  </header>
+
+  <main class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>Purpose / Function</h2>
+        <p class="muted">
+          Every system delivers exactly the results it’s designed to produce.
+          Define the function and measure against it.
+        </p>
+        <div class="purpose-box" id="purposeText" contenteditable="true" aria-label="Edit system purpose">
+          Empower users to create, share, and return—by reducing friction,
+          increasing perceived value, and nurturing trust.
+        </div>
+        <small class="muted">Tip: Click to edit your system's purpose.</small>
+      </section>
+
+      <section class="panel">
+        <h2>Leverage Points</h2>
+        <div class="lever">
+          <label for="delaySlider">Feedback Delay (days)</label>
+          <input id="delaySlider" type="range" min="0" max="14" value="4" />
+          <div class="lever-value"><span id="delayVal">4</span>d — shorten delays to stabilize loops</div>
+        </div>
+
+        <div class="lever">
+          <label for="incentiveSlider">Intrinsic Motivation Weight</label>
+          <input id="incentiveSlider" type="range" min="0" max="100" value="60" />
+          <div class="lever-value"><span id="incentiveVal">60</span>% — emphasize meaning over rewards</div>
+        </div>
+
+        <div class="lever">
+          <label for="frictionSlider">Friction (sign-up)</label>
+          <input id="frictionSlider" type="range" min="0" max="10" value="3" />
+          <div class="lever-value"><span id="frictionVal">3</span> — fewer steps, more flow</div>
+        </div>
+
+        <div class="toggle">
+          <input type="checkbox" id="highlightLoops" checked />
+          <label for="highlightLoops">Highlight reinforcing & balancing loops</label>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Guiding Principles</h2>
+        <ul class="principles">
+          <li><strong>Purpose first:</strong> Optimize for the true function.</li>
+          <li><strong>Stocks & flows:</strong> Watch build-ups, not just events.</li>
+          <li><strong>Delays matter:</strong> Slow feedback distorts behavior.</li>
+          <li><strong>Leverage points:</strong> Small changes, big outcomes.</li>
+          <li><strong>Human nature:</strong> Motivation, status, trust, reciprocity.</li>
+        </ul>
+      </section>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <section class="content">
+      <!-- CONTROLS -->
+      <div class="toolbar panel">
+        <div class="control">
+          <label for="timeframe">Timeframe</label>
+          <select id="timeframe">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="segment">Segment</label>
+          <select id="segment">
+            <option value="all" selected>All users</option>
+            <option value="creators">Creators</option>
+            <option value="browsers">Browsers</option>
+            <option value="buyers">Buyers</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="goalSelect">Primary Goal</label>
+          <select id="goalSelect">
+            <option value="activation" selected>Activation</option>
+            <option value="retention">Retention</option>
+            <option value="monetization">Monetization</option>
+            <option value="virality">Virality</option>
+          </select>
+        </div>
+        <div class="control control-grow">
+          <label for="search">Behavior keyword</label>
+          <input id="search" type="search" placeholder="e.g., share, comment, purchase…" />
+        </div>
+        <button id="applyFilters" class="btn btn-primary">Apply</button>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi-card">
+          <div class="kpi-label">Active Users</div>
+          <div class="kpi-value" id="kpiUsers">—</div>
+          <div class="kpi-trend" id="kpiUsersTrend">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Activation Rate</div>
+          <div class="kpi-value" id="kpiActivation">—</div>
+          <div class="kpi-trend" id="kpiActivationTrend">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Sessions/User</div>
+          <div class="kpi-value" id="kpiSessions">—</div>
+          <div class="kpi-trend" id="kpiSessionsTrend">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">NPS (Trust Proxy)</div>
+          <div class="kpi-value" id="kpiNPS">—</div>
+          <div class="kpi-trend" id="kpiNPSTrend">—</div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW -->
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">
+            <h2>Behavior Flow (Funnel)</h2>
+            <div class="mini-legend">
+              <span class="dot"></span> Conversion step
+            </div>
+          </div>
+          <canvas id="funnelChart" height="220" aria-label="Behavior funnel"></canvas>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <h2>Interaction Matrix (Heatmap)</h2>
+            <div class="mini-legend">
+              <span class="dot"></span> Intensity of interactions
+            </div>
+          </div>
+          <div id="heatmap" class="heatmap" role="img" aria-label="Interaction heatmap"></div>
+        </div>
+      </div>
+
+      <!-- SYSTEM MAP & INSIGHTS -->
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-title">
+            <h2>Causal Loop Map</h2>
+            <div class="mini-legend">
+              <span class="badge">R</span> reinforcing &nbsp; <span class="badge badge-b">B</span> balancing
+            </div>
+          </div>
+          <svg id="loopMap" viewBox="0 0 700 420" class="loop-map" aria-label="Causal loop map"></svg>
+          <div id="loopTooltip" class="tooltip" role="tooltip" hidden></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <h2>Insights</h2>
+            <button id="regenInsights" class="btn btn-ghost small">Regenerate</button>
+          </div>
+          <ul id="insightsList" class="insights"></ul>
+
+          <div class="panel-divider"></div>
+
+          <h3>Recommended Interventions</h3>
+          <ol id="interventionsList" class="insights interventions"></ol>
+        </div>
+      </div>
+
+      <!-- ABOUT -->
+      <section id="about" class="panel">
+        <h2>About</h2>
+        <p class="muted">
+          Inspired by systems thinking, this dashboard unites human behavior with business dynamics.
+          Explore loops, stocks, flows, and leverage points to design better outcomes.
+        </p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <span>Built with ❤ for system designers</span>
+    <span class="sep">•</span>
+    <span>Green palette for clarity & calm</span>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
